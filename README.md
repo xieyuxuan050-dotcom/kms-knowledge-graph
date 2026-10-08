@@ -14,25 +14,25 @@ The dataset describes two Master programmes at Riga Technical University: **Busi
 
 |File|Rows|What it contains|
 |-|-:|-|
-|`nodes\\\_study\\\_programs.csv`|2|Programme title, level, language, aims, tasks, employment, ...|
-|`nodes\\\_study\\\_fields.csv`|1|The study field both programmes belong to|
-|`nodes\\\_study\\\_courses.csv`|75|Course title, ECTS, languages, abstract, aims, literature, prerequisites|
-|`nodes\\\_course\\\_topics.csv`|640|Topics of each course, with contact / independent hours|
-|`nodes\\\_learning\\\_outcomes.csv`|392|26 programme outcomes (PLO) and 366 course outcomes (CLO)|
-|`program+study\\\_field.csv`|2|Programme → field|
+|`nodes\_study\_programs.csv`|2|Programme title, level, language, aims, tasks, employment, ...|
+|`nodes\_study\_fields.csv`|1|The study field both programmes belong to|
+|`nodes\_study\_courses.csv`|75|Course title, ECTS, languages, abstract, aims, literature, prerequisites|
+|`nodes\_course\_topics.csv`|640|Topics of each course, with contact / independent hours|
+|`nodes\_learning\_outcomes.csv`|392|26 programme outcomes (PLO) and 366 course outcomes (CLO)|
+|`program+study\_field.csv`|2|Programme → field|
 |`program+course.csv`|89|Programme → course, with section and ECTS|
 |`course+topic.csv`|640|Course → topic|
-|`course+learning\\\_outcome.csv`|366|Course → course outcome|
+|`course+learning\_outcome.csv`|366|Course → course outcome|
 
 **What I checked and found**
 
-* No duplicate rows and no duplicate IDs in any file. Every ID has a clear prefix (`TOPIC\\\_`, `PLO\\\_`, `CLO\\\_`, ...).
+* No duplicate rows and no duplicate IDs in any file. Every ID has a clear prefix (`TOPIC\_`, `PLO\_`, `CLO\_`, ...).
 * Referential integrity is perfect: every edge points to an existing node.
 * Every one of the 75 courses belongs to at least one programme and has at least one learning outcome.
 * **Six courses have no topics:** Digital Transformation, both Master Thesis courses, Study Design and Implementation, Computer-Assisted Text Analysis and Internship.
 * `program+course.csv` has 89 rows but only 75 distinct courses. DMB0 has 29 courses and HMD0 has 50 distinct courses (60 rows). **Four courses are in both programmes**, and some HMD0 courses appear twice in different sections (e.g. DE0739 is both compulsory and field-specific). Because of this, the programme–course link must be able to repeat, so it carries the section as a property.
 * The ECTS in the sections add up to more than 120 because the lists include courses of limited choice and free choice. Students do not take all of them.
-* Course outcomes are owned by courses (`owner\\\_id` = course) and programme outcomes by programmes (`owner\\\_id` = DMB0 or HMD0). This is why programme outcomes need their own relationship.
+* Course outcomes are owned by courses (`owner\_id` = course) and programme outcomes by programmes (`owner\_id` = DMB0 or HMD0). This is why programme outcomes need their own relationship.
 * The topic hours columns are numeric. Some hours columns are 0 for extramural study.
 
 \---
@@ -41,38 +41,38 @@ The dataset describes two Master programmes at Riga Technical University: **Busi
 
 ```mermaid
 graph LR
-    P\\\[Program] -->|IN\\\_FIELD| F\\\[StudyField]
-    P -->|INCLUDES\\\_COURSE| C\\\[Course]
-    P -->|HAS\\\_OUTCOME| PO\\\[LearningOutcome:ProgrammeOutcome]
-    C -->|HAS\\\_TOPIC| T\\\[Topic]
-    C -->|HAS\\\_OUTCOME| CO\\\[LearningOutcome:CourseOutcome]
+    P\[Program] -->|IN\_FIELD| F\[StudyField]
+    P -->|INCLUDES\_COURSE| C\[Course]
+    P -->|HAS\_OUTCOME| PO\[LearningOutcome:ProgrammeOutcome]
+    C -->|HAS\_TOPIC| T\[Topic]
+    C -->|HAS\_OUTCOME| CO\[LearningOutcome:CourseOutcome]
 ```
 
 **Nodes**
 
 |Label|Key (unique)|Main properties|
 |-|-|-|
-|`Program`|`program\\\_id`|title, level\_and\_type, study\_mode, languages, credit\_points, aims, ...|
-|`StudyField`|`study\\\_field\\\_id`|name|
-|`Course`|`course\\\_id`|title, credit\_points, languages, abstract, aims, prerequisites, source\_url|
-|`Topic`|`topic\\\_id`|title, ordinal, four hours columns, `total\\\_hours` (added by me)|
-|`LearningOutcome` (+ `ProgrammeOutcome` or `CourseOutcome`)|`outcome\\\_id`|text, scope, ordinal|
+|`Program`|`program\_id`|title, level\_and\_type, study\_mode, languages, credit\_points, aims, ...|
+|`StudyField`|`study\_field\_id`|name|
+|`Course`|`course\_id`|title, credit\_points, languages, abstract, aims, prerequisites, source\_url|
+|`Topic`|`topic\_id`|title, ordinal, four hours columns, `total\_hours` (added by me)|
+|`LearningOutcome` (+ `ProgrammeOutcome` or `CourseOutcome`)|`outcome\_id`|text, scope, ordinal|
 
 **Relationships**
 
 |Relationship|Count|Properties|
 |-|-:|-|
-|`(Program)-\\\[:IN\\\_FIELD]->(StudyField)`|2|–|
-|`(Program)-\\\[:INCLUDES\\\_COURSE]->(Course)`|89|credit\_points, section\_code, section\_name, subsection\_name|
-|`(Course)-\\\[:HAS\\\_TOPIC]->(Topic)`|640|–|
-|`(Course)-\\\[:HAS\\\_OUTCOME]->(LearningOutcome)`|366|–|
-|`(Program)-\\\[:HAS\\\_OUTCOME]->(LearningOutcome)`|26|–|
+|`(Program)-\[:IN\_FIELD]->(StudyField)`|2|–|
+|`(Program)-\[:INCLUDES\_COURSE]->(Course)`|89|credit\_points, section\_code, section\_name, subsection\_name|
+|`(Course)-\[:HAS\_TOPIC]->(Topic)`|640|–|
+|`(Course)-\[:HAS\_OUTCOME]->(LearningOutcome)`|366|–|
+|`(Program)-\[:HAS\_OUTCOME]->(LearningOutcome)`|26|–|
 
 **Design decisions**
 
 1. Each CSV node file became one label, and the IDs have uniqueness constraints.
-2. `course\\\_id` was removed from `Topic` and `owner\\\_id` from `LearningOutcome`, because they are now relationships and would only duplicate information.
-3. `INCLUDES\\\_COURSE` stores the section on the relationship because the same course can have a different role in different programmes or sections.
+2. `course\_id` was removed from `Topic` and `owner\_id` from `LearningOutcome`, because they are now relationships and would only duplicate information.
+3. `INCLUDES\_COURSE` stores the section on the relationship because the same course can have a different role in different programmes or sections.
 4. Outcomes have one common label (`LearningOutcome`) and a specific one, so queries can ask for all outcomes or only one kind.
 
 Expected size after import: **1,110 nodes** (2 + 1 + 75 + 640 + 392) and **1,123 relationships** (2 + 89 + 640 + 366 + 26).
@@ -82,15 +82,15 @@ Expected size after import: **1,110 nodes** (2 + 1 + 75 + 640 + 392) and **1,123
 ## 3\. Importing into AuraDB
 
 1. Create a free AuraDB instance at https://console.neo4j.io and save the credentials file (URI, username, password).
-2. Clone the dataset next to this folder: `git clone https://github.com/ArithaRTU/KMS\\\_Dataset.git`
+2. Clone the dataset next to this folder: `git clone https://github.com/ArithaRTU/KMS\_Dataset.git`
 3. Install the libraries: `pip install neo4j pandas`
-4. Set the credentials and run the script ([`import\\\_to\\\_auradb.py`](import_to_auradb.py)):
+4. Set the credentials and run the script ([`import\_to\_auradb.py`](import_to_auradb.py)):
 
 ```bash
-export NEO4J\\\_URI="neo4j+s://xxxxxxxx.databases.neo4j.io"
-export NEO4J\\\_USER="neo4j"
-export NEO4J\\\_PASSWORD="your-password"
-python import\\\_to\\\_auradb.py --data ./KMS\\\_Dataset --reset
+export NEO4J\_URI="neo4j+s://xxxxxxxx.databases.neo4j.io"
+export NEO4J\_USER="neo4j"
+export NEO4J\_PASSWORD="your-password"
+python import\_to\_auradb.py --data ./KMS\_Dataset --reset
 ```
 
 The script creates the constraints, loads nodes, loads relationships and prints the counts, which should match the numbers above.
@@ -114,9 +114,9 @@ All queries are in [`queries.cypher`](queries.cypher). Paste each one into the *
 Shows how the study courses are divided into sections in each programme.
 
 ```cypher
-MATCH (p:Program)-\\\[r:INCLUDES\\\_COURSE]->(c:Course)
-RETURN p.program\\\_id AS programme, r.section\\\_name AS section,
-       count(DISTINCT c) AS courses, sum(r.credit\\\_points) AS ects
+MATCH (p:Program)-\[r:INCLUDES\_COURSE]->(c:Course)
+RETURN p.program\_id AS programme, r.section\_name AS section,
+       count(DISTINCT c) AS courses, sum(r.credit\_points) AS ects
 ORDER BY programme, section;
 ```
 
@@ -136,8 +136,8 @@ ORDER BY programme, section;
 ### Q2. Courses shared by both programmes
 
 ```cypher
-MATCH (:Program {program\\\_id:'DMB0'})-\\\[:INCLUDES\\\_COURSE]->(c:Course)<-\\\[:INCLUDES\\\_COURSE]-(:Program {program\\\_id:'HMD0'})
-RETURN DISTINCT c.course\\\_id AS course, c.title AS title, c.credit\\\_points AS ects
+MATCH (:Program {program\_id:'DMB0'})-\[:INCLUDES\_COURSE]->(c:Course)<-\[:INCLUDES\_COURSE]-(:Program {program\_id:'HMD0'})
+RETURN DISTINCT c.course\_id AS course, c.title AS title, c.credit\_points AS ects
 ORDER BY course;
 ```
 
@@ -155,12 +155,12 @@ ORDER BY course;
 ### Q3. Which courses teach about knowledge, ontologies or semantics?
 
 ```cypher
-MATCH (c:Course)-\\\[:HAS\\\_TOPIC]->(t:Topic)
+MATCH (c:Course)-\[:HAS\_TOPIC]->(t:Topic)
 WHERE toLower(t.title) CONTAINS 'knowledge'
    OR toLower(t.title) CONTAINS 'ontolog'
    OR toLower(t.title) CONTAINS 'semantic'
-RETURN c.course\\\_id AS course, c.title AS title, count(t) AS matching\\\_topics
-ORDER BY matching\\\_topics DESC, course;
+RETURN c.course\_id AS course, c.title AS title, count(t) AS matching\_topics
+ORDER BY matching\_topics DESC, course;
 ```
 
 The query returns **13 courses** (20 matching topics). The first rows are:
@@ -186,10 +186,10 @@ Result, part 2 (remaining rows, 13 courses in total):
 ### Q4. The five most topic-heavy courses
 
 ```cypher
-MATCH (c:Course)-\\\[:HAS\\\_TOPIC]->(t:Topic)
-RETURN c.course\\\_id AS course, c.title AS title, c.credit\\\_points AS ects,
-       count(t) AS topics, sum(t.total\\\_hours) AS total\\\_hours
-ORDER BY topics DESC, total\\\_hours DESC
+MATCH (c:Course)-\[:HAS\_TOPIC]->(t:Topic)
+RETURN c.course\_id AS course, c.title AS title, c.credit\_points AS ects,
+       count(t) AS topics, sum(t.total\_hours) AS total\_hours
+ORDER BY topics DESC, total\_hours DESC
 LIMIT 5;
 ```
 
@@ -201,14 +201,14 @@ LIMIT 5;
 |DE0827|Research Strategies and Writing for Academic Publishing|3.0|16|160|
 |DE0717|Artificial Intelligence in Humanities|3.0|16|73|
 
-*Comment:* the total hours use the `total\\\_hours` property computed during import. A 3 ECTS course such as DE0814 has almost as many topics as the biggest 6 ECTS courses.
+*Comment:* the total hours use the `total\_hours` property computed during import. A 3 ECTS course such as DE0814 has almost as many topics as the biggest 6 ECTS courses.
 
 !\[Q4 result](screenshots/6\_q4.png)
 
 ### Q5. Graph view of one course
 
 ```cypher
-MATCH path = (p:Program)-\\\[:INCLUDES\\\_COURSE]->(c:Course {course\\\_id:'DE0739'})-\\\[:HAS\\\_TOPIC|HAS\\\_OUTCOME]->(x)
+MATCH path = (p:Program)-\[:INCLUDES\_COURSE]->(c:Course {course\_id:'DE0739'})-\[:HAS\_TOPIC|HAS\_OUTCOME]->(x)
 RETURN path;
 ```
 
@@ -219,8 +219,8 @@ Switch to the **Graph** view. The picture shows the course *Knowledge Management
 ### Bonus: data-quality check
 
 ```cypher
-MATCH (c:Course) WHERE NOT (c)-\\\[:HAS\\\_TOPIC]->()
-RETURN c.course\\\_id AS course, c.title AS title ORDER BY course;
+MATCH (c:Course) WHERE NOT (c)-\[:HAS\_TOPIC]->()
+RETURN c.course\_id AS course, c.title AS title ORDER BY course;
 ```
 
 This returns the 6 courses without topics listed in Section 1.
@@ -241,7 +241,7 @@ This returns the 6 courses without topics listed in Section 1.
 |File|Purpose|
 |-|-|
 |`README.md`|This report|
-|`import\\\_to\\\_auradb.py`|Loads the CSV files into AuraDB|
+|`import\_to\_auradb.py`|Loads the CSV files into AuraDB|
 |`queries.cypher`|The queries used in the report|
 |`screenshots/`|Screenshots of the AuraDB results|
 
